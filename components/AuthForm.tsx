@@ -24,66 +24,70 @@ import {
 } from "@/components/ui/form";
 import { Input } from './ui/input';
 import { Loader2 } from 'lucide-react';
+import PlaidLink from './PlaidLink';
 
 
 
 
 
 
-const AuthForm = (
-  { type } : { type: string }
-) => {
+const AuthForm = ({ type } : { type: string }) => {
 
-const [user, setUser] = useState(null);
-const [isLoading, setIsLoading] = useState(false);
+  const router = useRouter();
+  const [user, setUser] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
 
+  const formSchema = authFormSchema(type);
 
+    // 1. Define your form.
+    const form = useForm<z.infer<typeof formSchema>>({
+      resolver: zodResolver(formSchema),
+      defaultValues: {
+        email: "",
+        password: ''
+      },
+    })
+   
+    // 2. Define a submit handler.
+    const onSubmit = async (data: z.infer<typeof formSchema>) => {
+      setIsLoading(true);
 
-const router = useRouter();
+      try {
+        // Sign up with Appwrite & create plaid token
+        
+        if(type === 'sign-up') {
+          const userData = {
+            firstName: data.firstName!,
+            lastName: data.lastName!,
+            address1: data.address1!,
+            city: data.city!,
+            state: data.state!,
+            postalCode: data.postalCode!,
+            dateOfBirth: data.dateOfBirth!,
+            ssn: data.ssn!,
+            email: data.email,
+            password: data.password
+          }
 
-// SCHEMA OF THE USER DATA
-const formSchema = authFormSchema(type);
+          const newUser = await signUp(userData);
 
-// 1.Define your form
-const form = useForm<z.infer<typeof formSchema>>({
-  resolver: zodResolver(formSchema),
-  defaultValues: {
-    email: "",
-    password: "",
-  }
-});
+          setUser(newUser);
+        }
 
+        if(type === 'sign-in') {
+          const response = await signIn({
+            email: data.email,
+            password: data.password,
+          })
 
-// 2.Define a submit handler
-const onSubmit = async (data: z.infer<typeof formSchema>) => {
-  setIsLoading(true);
-
-  try {
-    //Sign up with AppWrite & create plaid token 
-    if (type === 'sign-up'){
-
-     const newUser = await signUp(data);
-
-     setUser(newUser);
-
+          if(response) router.push('/')
+        }
+      } catch (error) {
+        console.log(error);
+      } finally {
+        setIsLoading(false);
+      }
     }
-    
-    if (type === 'sign-in'){
-      const response = await signIn({
-        email: data.email,
-        password: data.password,
-      })
-
-      if (response) router.push('/'); 
-    }
-
-  } catch (error) {
-    console.log(error);
-  } finally {
-    setIsLoading(false);
-  }
-};
-
 
 
   return (
@@ -119,7 +123,10 @@ const onSubmit = async (data: z.infer<typeof formSchema>) => {
       </header>
       {user ? (
         <div className='flex flex-col gap-4'>
-          {/* PlaidLink */}
+          <PlaidLink 
+            user={user}
+            variant="primary"
+          />
         </div>
       ) : (
         <>
@@ -145,15 +152,15 @@ const onSubmit = async (data: z.infer<typeof formSchema>) => {
                 </div>
                 <CustomInput 
                   control={form.control}
-                  name='city' 
-                  label='City' 
-                  placeholder='Where do you live?'
-                />
-                <CustomInput 
-                  control={form.control}
                   name='address1' 
                   label='Address' 
                   placeholder='Enter your specific address.'
+                />
+                <CustomInput 
+                  control={form.control}
+                  name='city' 
+                  label='City' 
+                  placeholder='Where do you live?'
                 />
 
                 <div className='flex gap-4'>
