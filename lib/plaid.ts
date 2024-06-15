@@ -1,6 +1,4 @@
-
 import { Configuration, PlaidApi, PlaidEnvironments } from 'plaid';
-
 
 const configuration = new Configuration({
   basePath: PlaidEnvironments.sandbox,
@@ -10,6 +8,6 @@ const configuration = new Configuration({
       'PLAID-SECRET': process.env.PLAID_SECRET,
     }
   }
-});
+})
 
 export const plaidClient = new PlaidApi(configuration);
