@@ -1,4 +1,6 @@
-export const dinamyc = 'force-dynamic';
+// fix "dynamic server usage" errors in dev mode by turning off static generation and forcing dynamic rendering
+
+export const dynamic =  process.env.NODE_ENV === "production" ? 'auto' : 'force-dynamic';
 
 import type { Metadata } from "next";
 import { Inter, IBM_Plex_Serif } from "next/font/google";
